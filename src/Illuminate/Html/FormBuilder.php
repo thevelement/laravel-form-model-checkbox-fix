@@ -641,7 +641,9 @@ class FormBuilder {
 		if ($this->missingOldAndModel($name)) return $checked;
 
 		$posted = $this->getValueAttribute($name);
-
+		
+		$posted =  ($posted instanceof \Illuminate\Database\Eloquent\Collection ? $this->checkRelationship($posted, $value) : $posted);
+		
 		return is_array($posted) ? in_array($value, $posted) : (bool) $posted;
 	}
 
@@ -909,6 +911,26 @@ class FormBuilder {
 		{
 			return array_get($this->model, $this->transformKey($name));
 		}
+	}
+	
+	/**
+	 * Cycle through the Eloquent Collection to see if any
+	 * relationship models include the given input value
+	 *
+	 * @param \Illuminate\Database\Eloquent\Collection $collection
+	 * @param string $value
+	 * @param string $attribute
+	 *
+	 * @return bool
+	 */
+	protected function checkRelationship($collection, $value, $attribute = 'id')
+	{
+		foreach ($collection as $relation)
+		{
+			if ($relation->$attribute == $value) return true;
+		}
+			
+		return false;
 	}
 
 	/**
